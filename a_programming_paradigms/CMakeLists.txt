@@ -5,13 +5,21 @@ project(programming_paradigms)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+
 add_executable(${PROJECT_NAME}
+    "src/cd_player.cpp"
     "src/main.cpp"
 )
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         "include"
+)
+
+ament_target_dependencies(${PROJECT_NAME}
+    rclcpp
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -28,4 +36,11 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -Wuseless-cast
   -Wdouble-promotion
   -Wformat=2
-  -pedantic)
+  -pedantic
+)
+
+install(TARGETS ${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+ament_package()
