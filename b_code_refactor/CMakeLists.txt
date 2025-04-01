@@ -5,7 +5,17 @@ project(robot_brain)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+
+add_executable(${PROJECT_NAME}
+    "src/robot.cpp"
+    "src/main.cpp"
+)
+
+ament_target_dependencies(${PROJECT_NAME}
+    rclcpp
+)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
   -Wall
@@ -21,4 +31,11 @@ target_compile_options(${PROJECT_NAME} PRIVATE
   -Wuseless-cast
   -Wdouble-promotion
   -Wformat=2
-  -pedantic)
+  -pedantic
+)
+
+install(TARGETS ${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+ament_package()
