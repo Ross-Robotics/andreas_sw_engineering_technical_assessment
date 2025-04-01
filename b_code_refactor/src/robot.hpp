@@ -18,7 +18,7 @@ private:
     static constexpr double BATTERY_CHARGE_TIME_FACTOR = 0.5;  // Renamed for consistency
     static constexpr double PROCESS_TIME = 100.0;
     static constexpr double SPEED = 1.0;  // Default Movement Speed m/s
-    static constexpr double TURNING_SPEED = 90.0;  // Default Truning Speed deg/s
+    static constexpr double TURNING_SPEED = 90.0;  // Default Turning Speed deg/s
 
     int battery;
     bool isCharging;
