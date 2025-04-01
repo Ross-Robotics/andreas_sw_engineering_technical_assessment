@@ -66,6 +66,36 @@ This is the section that is the main part of the assessment. In here you need to
 
 For each of the parts of the system define a communications physical layer, along with a protocol that might be suitable, for example: A Camera might have the requirement of streaming live video, and because it is inside the robot it can be connected via an ethernet cable. As for the protocol to stream the images/video, well that is part of the assessment.
 
+### System Design
+
+The robotic system is designed with modular architecture, enabling clear communication from hardware interfaces to the Graphical User Interface (GUI). Below is a overview of the physical layers, protocols, and design rationale.
+
+#### Communication Layers and Protocols
+
+- **Robot Peripherals to MPU**:
+  - **Sensors and actuators** (Object Detection, Pan Tilt Unit, Robotic Arm, Smart Battery, IMU, Driving Lights, Environmental Sensors):
+    - **Physical Layer:** CAN bus (wired)
+    - **Protocol:** Custom/CANopen (low-latency, small data)
+
+  - **Cameras and 3D Mapping:**
+    - **Physical Layer:** Ethernet
+    - **Protocol:** RTSP (video streams), HTTP (control), custom UDP (3D mapping)
+
+  - **Communications Radio (internal to MPU):**
+    - **Physical Layer:** Ethernet
+    - **Protocol:** TCP/IP
+
+- **MPU ↔ RCU (Remote Control Unit):**
+  - **Physical Layer:** Wi-Fi (802.11)
+  - **Protocol:** UDP (teleoperation), TCP (telemetry), RTSP (video streams)
+
+#### Design Rationale
+- **CAN Bus:** Reliable and efficient for real-time control and sensor data.
+- **Ethernet & RTSP:** High bandwidth needed for camera streaming and mapping data.
+- **Wi-Fi:** Provides suitable range, bandwidth, and low latency for teleoperation.
+- **TCP vs UDP:** UDP prioritizes speed (critical commands), TCP ensures data integrity (telemetry).
+
+## Diagram:
 
 ```mermaid
 ---
@@ -102,22 +132,56 @@ flowchart LR
     3dmap["3D Mapping Stack"]
     imu["IMU"]
     es["Environmental Sensors"]
+    comradio["Communications Radio"]
   end
 
-  %% Example of some of the desired connections.
-  %% For each of the connections propose a physical layer for the communications and if needed a protocol.
+  %% Peripherals to DAL
+  fod -->|"CAN bus/custom protocol"| dal
+  rod -->|"CAN bus/custom protocol"| dal
+  ptu -->|"CAN bus/custom protocol"| dal
+  ra -->|"CAN bus/custom protocol"| dal
+  smba -->|"CAN bus/custom protocol"| dal
+  dl -->|"CAN bus/custom protocol"| dal
+  imu -->|"CAN bus/custom protocol"| dal
+  es -->|"CAN bus/custom protocol"| dal
+  fc -->|"Ethernet/RTSP & HTTP"| dal
+  rc -->|"Ethernet/RTSP & HTTP"| dal
+  tc -->|"Ethernet/RTSP & HTTP"| dal
+  3dmap -->|"Ethernet/custom protocol"| dal
+  comradio -->|"Ethernet/TCP/IP"| dal
 
-  %% Data connections for peripherals to MPU with relevant communications layer and protocol
-  tc<--"Ethernet/(image protocol?)"-->dal
-  tc<--"Ethernet/(control/telemetry?)"-->dal
+  %% Internal MPU connections
+  hlri <-->|"internal software interface"| dal
+  hlri <-->|"internal software interface"| as
 
-  %% Data connections for MPU to RCU with relevant
-  hlri<--"Wireles/protocol?"-->teleop
-  hlri<--"Wireles/protocol?"-->teleme
+  %% MPU to RCU connections
+  teleop -->|"Wireless (Wi-Fi)/UDP"| hlri
+  hlri -->|"Wireless (Wi-Fi)/TCP"| teleme
+  hlri -->|"Wireless (Wi-Fi)/RTSP"| camstr
+  misccom <-->|"Wireless (Wi-Fi)/TCP"| hlri
 
-
-  %% Internal MPU data connections
-  hlri<--"Protocol?"-->dal
-  hlri<--"Protocol?"-->as
-
+  %% Note
+  %% The wireless connections are facilitated by the Communications Radio peripheral
+  %% P.S. First time using mermaid, quite cool.
 ```
+
+
+#### Summary Table of Connections
+
+
+| **Component**                    | **Connected To** | **Physical Layer** | **Protocol**                      |
+|----------------------------------|------------------|--------------------|-----------------------------------|
+| Front Object Detection           | DAL              | CAN bus            | Custom protocol                   |
+| Front Camera                     | DAL              | Ethernet           | RTSP (streaming), HTTP (control)  |
+| Communications Radio             | DAL              | Ethernet           | TCP/IP                            |
+| HLRI to Teleoperation (RCU)      | RCU              | Wireless (Wi-Fi)   | UDP                               |
+| HLRI to Telemetry (RCU)          | RCU              | Wireless (Wi-Fi)   | TCP                               |
+| HLRI to Camera Streams (RCU)     | RCU              | Wireless (Wi-Fi)   | RTSP                              |
+
+#### Design Choices and Assumptions
+- CAN bus is suitable for low-latency, small-data peripherals, given its use in automotive and robotics
+- Ethernet is chosen for high-bandwidth devices, aligning with standard practices for video and large data transfer
+- The Communications Radio provides a network interface over Ethernet, simplifying wireless integration.
+- Components within robot (<1m) use wired CAN/Ethernet.
+- Wi-Fi provides sufficient range and low latency.
+- The environment is free from significant interference.
